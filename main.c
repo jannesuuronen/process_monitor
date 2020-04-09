@@ -1,6 +1,9 @@
 #define _POSIX_SOURCE
 #define _GNU_SOURCE
 
+#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
+
+
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -19,8 +22,6 @@
  * Description: stores all measurements to a file with the provided output filename
  * ********/
 
-#define NUM_COUNTERS 5
-
 struct PAPI_event
 {
     int event;
@@ -29,12 +30,12 @@ struct PAPI_event
 
 typedef struct PAPI_event PAPI_event;
 
-PAPI_event PAPI_events[NUM_COUNTERS] = {
+PAPI_event PAPI_events[] = {
     {PAPI_TOT_INS, "PAPI_TOT_INS"},
-    {PAPI_L3_TCA, "PAPI_L3_TCA"},
+    {PAPI_L2_TCM, "PAPI_L2_TCM"},
     {PAPI_L2_DCA, "PAPI_L2_DCA"},
-    {PAPI_L3_TCM, "PAPI_L3_TCM"},
-    {PAPI_L2_TCM, "PAPI_L2_TCM"}
+    {PAPI_L3_TCA, "PAPI_L3_TCA"},
+    {PAPI_L3_TCM, "PAPI_L3_TCM"}
 };
 
 int write_measurements_to_file(unsigned int nr_counters, long long (*measurements)[nr_counters], unsigned int num_measurements,  char *output_filename)
@@ -44,7 +45,7 @@ int write_measurements_to_file(unsigned int nr_counters, long long (*measurement
     {
         for(size_t j = 0; j < nr_counters; j++)
         {
-            fprintf(fp, "%llu,\t", measurements[i][j]);
+            fprintf(fp, "%llu,", measurements[i][j]);
         }
         fprintf(fp, "\n");
     }
@@ -60,6 +61,7 @@ void print_header(int nr_counters)
         printf("%s\t", PAPI_events[i].event_name);
     }
     printf("\n");
+    return;
 }
 
 void print_help()
@@ -94,6 +96,7 @@ int main(int argc, char *argv[])
     char executable_path[256] = "";
     // int core = atou(argv[5]);
     strcpy(executable_path, argv[4]);
+    pid_t pid = atoi(argv[5]);
 
     char outputfile_name[64] = "output.csv";
     int return_code = 0;
@@ -104,9 +107,11 @@ int main(int argc, char *argv[])
     // CPU_SET(core, &cpu_set);
 
     /* Spawn process args */
-    char *spawn_args[4];
+    char *spawn_args[] = {"4096 ", "0", "1 ", NULL};
+
    
-    int nr_counters = NUM_COUNTERS;
+    int nr_counters = NELEMS(PAPI_events);
+    printf("%d\n", nr_counters);
     long long values[nr_counters];
     long long values_storage[num_measurements][nr_counters];
     PAPI_option_t opt;
@@ -119,7 +124,6 @@ int main(int argc, char *argv[])
         perror("Could not init PAPI\n");
         exit(-1);
     }
-
     if ((return_code = PAPI_create_eventset(&PAPI_eventset) != PAPI_OK))
     {
         perror("Could not create eventset\n");
@@ -153,28 +157,27 @@ int main(int argc, char *argv[])
         }
     }
     
-    /* Spawn application process */
-
-    pid_t child_pid = fork();
-    if (child_pid < 0)
-    {
-        perror("Fork() failed.\n");
-        exit(-1);
-    }
-    if (child_pid == 0)
-    {
-        printf("Started provided executable process with pid: %d\n.", getpid());
-        execv(executable_path, spawn_args);
-        exit(-1);
-    }
-    else
-    {
+    // pid_t child_pid = fork();
+    // if (child_pid < 0)
+    // {
+    //     perror("Fork() failed.\n");
+    //     exit(-1);
+    // }
+    // if (child_pid == 0)
+    // {
+    //     printf("Started provided executable process with pid: %d\n.", getpid());
+    //     execl(executable_path, "2048", "0", "0", NULL);
+    //     exit(-1);
+    // }
+    // else
+    // {
         /* Affine child process to cpu set mask */
 
         /* Parent attaches PAPI to child */
 
-        printf("Attaching to pid %d\n", child_pid);
-        if ((return_code = PAPI_attach(PAPI_eventset, (unsigned long)child_pid) != PAPI_OK))
+        printf("Attaching to pid %d\n", pid);
+        sleep(1);
+        if ((return_code = PAPI_attach(PAPI_eventset, (unsigned long)pid) != PAPI_OK))
         {
             perror("Could not attach PAPI to process\n");
             exit(-1);
@@ -194,6 +197,7 @@ int main(int argc, char *argv[])
 
         for (size_t i = 0; i < num_measurements; i++)
         {
+            sleep(sleep_time);
             PAPI_read(PAPI_eventset, values);
             /* Print counter values */
             for(size_t j = 0; j < nr_counters; j++)
@@ -204,7 +208,6 @@ int main(int argc, char *argv[])
             printf("\n");
             //*values_storage[i] = *values;
             PAPI_reset(PAPI_eventset);
-            sleep(sleep_time);
         }
 
         /* Write output to file is requested */
@@ -212,7 +215,7 @@ int main(int argc, char *argv[])
         if (write_to_file == 0)
         {
             char file_name[32];
-            sprintf(file_name, "%d", child_pid);
+            sprintf(file_name, "%d", pid);
             strcat(file_name, outputfile_name);
             printf("Writing measurements to output file %s\n", file_name);
             write_measurements_to_file(nr_counters, values_storage, num_measurements, file_name);
@@ -220,12 +223,12 @@ int main(int argc, char *argv[])
 
         /* Kill the child process */
 
-        if(kill(child_pid, SIGTERM) != 0)
+        if(kill(pid, SIGTERM) != 0)
         {
             perror("Could not terminate process.\n");
             exit(-1);
         }
         printf("Application terminated.\n");
-    }
+    // }
     return 0;
 }
