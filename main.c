@@ -117,11 +117,12 @@ void print_help()
     printf("Usage: ./process_monitor <number of measurements> <interval in seconds> <write to file> <path to executable to be monitored> \n");
     printf("Params: \n");
     printf(" number of measurements \t <int> \t: number of measurements the monitor will perform before terminating \n");
-    printf(" interval in seconds \t <int> \t: with which interval the monitor will take measurements of application \n");
+    printf(" interval in nanoseconds \t <int> \t: with which interval the monitor will take measurements of application \n");
     printf(" write to file \t <int> \t \t: write measurements to CSV file (0 for yes, 1 for no) \n");
-    printf(" path to executable \t <string> \t: path to the executable that the process monitor will spawn \n");
+    printf(" path to executable \t <string> <space seperated argument list> \t: path to the executable that the process monitor will spawn with the provided arguments\n");
     printf("\n");
-    printf("Example: ./process_monitor 100 1 1 /home/janne/asm/instructionloop\n");
+    printf("Example: ./process_monitor 100 10000000 1 /home/janne/asm/instructionloop\n");
+    printf("Example: ./process_monitor 200 1 1 /home/janne/payloads/Palloc_program/Matmult/matmult 512 0 0\n");
     printf("\n");
     return;
 }
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
     assert(num_measurements > 0);
 
     time.tv_sec = 0;
-    time.tv_nsec = sleep_time * 10000000000;
+    time.tv_nsec = sleep_time;
 
     /* Set up affinity mask */
     // cpu_set_t cpu_set;
@@ -180,7 +181,7 @@ int main(int argc, char *argv[])
     PAPI_option_t opt;
 
     printf("PAPI Version: %d\n", PAPI_VER_CURRENT);
-    printf("Performing %d measurements with %d second intervals\n", num_measurements, sleep_time);
+    printf("Performing %d measurements with %d nanosecond intervals\n", num_measurements, sleep_time);
 
     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT)
     {
@@ -229,16 +230,12 @@ int main(int argc, char *argv[])
     if (child_pid == 0)
     {
         printf("Started provided executable process with pid: %d\n", getpid());
-        // fflush(stdout);
-        // execl(executable_path, executable_path, "google.com", (char*)0);
         execv(executable_path, spawn_args);
         perror("Execv failed\n");
         exit(-1);
     }
     else
     {
-        /* Affine child process to cpu set mask */
-
         /* Parent attaches PAPI to child */
 
         printf("Attaching to pid %d\n", child_pid);
