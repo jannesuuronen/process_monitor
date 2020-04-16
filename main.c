@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <sched.h>
 #include <assert.h>
+#include <signal.h>
 
 /**********
  * Name: write_measurements_to_file
@@ -88,28 +89,6 @@ void print_counter_averages(unsigned int nr_counters, long long (*measurements)[
     printf("\n");
 }
 
-// int read_command_args_from_file(char **args, char* args_file_path)
-// {
-//     FILE * fp = fopen(args_file_path, "r");
-//     char line[128];
-//     size_t len = 0;
-//     ssize_t read;
-//     unsigned int i = 1;
-
-//     if (fp == NULL)
-//         return -1;
-
-//     while ( fgets ( line, sizeof line, fp ) != NULL ) /* read a line */
-//     {        
-//         if(strcmp(line, "\n") != 0)
-//             strcpy(args[i], line);
-
-//         printf("Read argument: %s \n", line);
-//     }
-
-//     fclose(fp);
-// }
-
 void print_help()
 {
     printf("\n");
@@ -146,7 +125,6 @@ int main(int argc, char *argv[])
     char **spawn_args;
     struct timespec time;
     spawn_args[0] = malloc(sizeof(char) * 256);
-    // int core = atou(argv[5]);
     /* copy the executable path */
     strcpy(executable_path, argv[4]);
     
@@ -260,6 +238,7 @@ int main(int argc, char *argv[])
         for (size_t i = 0; i < num_measurements; i++)
         {
             usleep(sleep_time);
+            
             PAPI_read(PAPI_eventset, values);
             /* Print counter values */
             for(size_t j = 0; j < nr_counters; j++)
@@ -269,7 +248,17 @@ int main(int argc, char *argv[])
             }
             printf("\n");
             PAPI_reset(PAPI_eventset);
+            
+            /* check if process still is active */
+            if(kill(child_pid, 0) < 0)
+            {
+                perror("Status check failed");
+                break;   
+            }
         }
+
+        /* Stop PAPI counters */
+        PAPI_stop(PAPI_eventset, values);
 
         /* Print the averages of collected data */
         print_counter_averages(nr_counters, values_storage, num_measurements);
@@ -293,6 +282,8 @@ int main(int argc, char *argv[])
             exit(-1);
         }
         printf("Application terminated.\n");
+        
+        PAPI_shutdown();
     }
     return 0;
 }
