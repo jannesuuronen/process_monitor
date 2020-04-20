@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/janne/C/process_monitor/build",
+  "command": "/usr/bin/x86_64-linux-gnu-gcc-7   -g   -o CMakeFiles/process_monitor.dir/main.c.o   -c /home/janne/C/process_monitor/main.c",
+  "file": "/home/janne/C/process_monitor/main.c"
+}
+]

@@ -8,9 +8,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <papi.h>
-#include <pthread.h>
 #include <string.h>
+#include <pthread.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -18,16 +17,17 @@
 #include <sched.h>
 #include <assert.h>
 #include <signal.h>
+#include <papi.h>
 
 /**********
- * Name: write_measurements_to_file
+ * Name: write_measurements_to_csv_file
  * Description: stores all measurements to a file with the provided output filename
  * ********/
 
 struct PAPI_event
 {
     int event;
-    char event_name[64];
+    char *event_name;
 };
 
 typedef struct PAPI_event PAPI_event;
@@ -40,9 +40,18 @@ PAPI_event PAPI_events[] = {
     {PAPI_L3_TCM, "PAPI_L3_TCM"}
 };
 
-int write_measurements_to_file(unsigned int nr_counters, long long (*measurements)[nr_counters], unsigned int num_measurements,  char *output_filename)
+int write_measurements_to_csv_file(unsigned int nr_counters, long long (*measurements)[nr_counters], unsigned int num_measurements,  char *output_filename)
 {
     FILE *fp = fopen(output_filename, "w");
+
+    /* write column line */
+    for (size_t i = 0; i < nr_counters; i++)
+    {
+        fprintf(fp, "%s,", PAPI_events[i].event_name);
+    }
+    fprintf(fp, "\n");
+    
+    /* write captured events */
     for (size_t i = 0; i < num_measurements; i++)
     {
         for(size_t j = 0; j < nr_counters; j++)
@@ -93,7 +102,7 @@ void print_help()
 {
     printf("\n");
     printf("***** Process monitor *****\n");
-    printf("Usage: ./process_monitor <number of measurements> <interval in seconds> <write to file> <path to executable to be monitored> \n");
+    printf("Usage: ./process_monitor <number of measurements> <interval in milliseconds> <write to file> <path to executable to be monitored> \n");
     printf("Params: \n");
     printf(" number of measurements \t <int> \t: number of measurements the monitor will perform before terminating \n");
     printf(" interval in nanoseconds \t <int> \t: with which interval the monitor will take measurements of application \n");
@@ -107,7 +116,7 @@ void print_help()
 }
 
 
-int main(int argc, char *argv[])
+int main(int argc, char const **argv)
 {
     if (argc < 4)
     {
@@ -115,28 +124,34 @@ int main(int argc, char *argv[])
         print_help();
         return -1;
     }
-    unsigned int num_measurements = atoi(argv[1]);
+  
+    int num_measurements = atoi(argv[1]);
     int PAPI_eventset = PAPI_NULL;
-    int sleep_time = atoi(argv[2]); 
+    int sleep_time = (1000 * atoi(argv[2])); 
     int write_to_file = atoi(argv[3]);
     int return_code = 0;
-    char *executable_path = argv[4];
+    char executable_path[256];
+    char *test = malloc(128);
     char outputfile_name[64] = "output.csv";
-    char **spawn_args;
-    struct timespec time;
-    spawn_args[0] = malloc(sizeof(char) * 256);
+    char **spawn_args = (char**)malloc(512 * sizeof(char *));
+
+    for (size_t i = 0; i < argc; i++)
+    {
+        spawn_args[i] = (char *)malloc(256 * sizeof(char));
+    }
+    
     /* copy the executable path */
     strcpy(executable_path, argv[4]);
-    
-    /* copy executable path to the first cmd-line argument */
-    strcpy(spawn_args[0], executable_path);
+    executable_path[255] = '\0';
 
-    /* parse command lines arguments for provided executable */
+    /* assign executable path to the first cmd-line argument */
+    spawn_args[0] = executable_path;
+
+    /* store command lines arguments for provided executable to argument array */
     int j = 1;
     for (size_t i = 5; i < argc; i++)
     {
-        spawn_args[j] = malloc(sizeof(char) * 64);
-        memcpy(spawn_args[j], argv[i], sizeof(argv[i]));
+        sprintf(spawn_args[j], "%s", argv[i]);
         j++;
     }
     spawn_args[++j] = NULL;
@@ -145,21 +160,13 @@ int main(int argc, char *argv[])
     assert(sleep_time >= 0);
     assert(num_measurements > 0);
 
-    time.tv_sec = 0;
-    time.tv_nsec = sleep_time;
-
-    /* Set up affinity mask */
-    // cpu_set_t cpu_set;
-    // CPU_ZERO(&cpu_set);
-    // CPU_SET(core, &cpu_set);
-
     int nr_counters = NELEMS(PAPI_events);
     long long values[nr_counters];
     long long values_storage[num_measurements][nr_counters];
     PAPI_option_t opt;
 
     printf("PAPI Version: %d\n", PAPI_VER_CURRENT);
-    printf("Performing %d measurements with %d nanosecond intervals\n", num_measurements, sleep_time);
+    printf("Performing %d measurements with %d ms intervals\n", num_measurements, sleep_time/1000);
 
     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT)
     {
@@ -271,7 +278,7 @@ int main(int argc, char *argv[])
             sprintf(file_name, "%d", child_pid);
             strcat(file_name, outputfile_name);
             printf("Writing measurements to output file %s\n", file_name);
-            write_measurements_to_file(nr_counters, values_storage, num_measurements, file_name);
+            write_measurements_to_csv_file(nr_counters, values_storage, num_measurements, file_name);
         }
 
         /* Kill the child process */
