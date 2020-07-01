@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     char executable_path[256] = "";
     // int core = atou(argv[5]);
     strcpy(executable_path, argv[4]);
-    pid_t pid = atoi(argv[5]);
+    // pid_t pid = atoi(argv[5]);
 
     char outputfile_name[64] = "output.csv";
     int return_code = 0;
@@ -157,27 +157,27 @@ int main(int argc, char *argv[])
         }
     }
     
-    // pid_t child_pid = fork();
-    // if (child_pid < 0)
-    // {
-    //     perror("Fork() failed.\n");
-    //     exit(-1);
-    // }
-    // if (child_pid == 0)
-    // {
-    //     printf("Started provided executable process with pid: %d\n.", getpid());
-    //     execl(executable_path, "2048", "0", "0", NULL);
-    //     exit(-1);
-    // }
-    // else
-    // {
+    pid_t child_pid = fork();
+    if (child_pid < 0)
+    {
+        perror("Fork() failed.\n");
+        exit(-1);
+    }
+    if (child_pid == 0)
+    {
+        printf("Started provided executable process with pid: %d\n.", getpid());
+        execl(executable_path, "2048", "0", "0", NULL);
+        exit(-1);
+    }
+    else
+    {
         /* Affine child process to cpu set mask */
 
         /* Parent attaches PAPI to child */
 
-        printf("Attaching to pid %d\n", pid);
+        printf("Attaching to pid %d\n", child_pid);
         sleep(1);
-        if ((return_code = PAPI_attach(PAPI_eventset, (unsigned long)pid) != PAPI_OK))
+        if ((return_code = PAPI_attach(PAPI_eventset, (unsigned long)child_pid) != PAPI_OK))
         {
             perror("Could not attach PAPI to process\n");
             exit(-1);
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         if (write_to_file == 0)
         {
             char file_name[32];
-            sprintf(file_name, "%d", pid);
+            sprintf(file_name, "%d", child_pid);
             strcat(file_name, outputfile_name);
             printf("Writing measurements to output file %s\n", file_name);
             write_measurements_to_file(nr_counters, values_storage, num_measurements, file_name);
@@ -223,12 +223,12 @@ int main(int argc, char *argv[])
 
         /* Kill the child process */
 
-        if(kill(pid, SIGTERM) != 0)
+        if(kill(child_pid, SIGTERM) != 0)
         {
             perror("Could not terminate process.\n");
             exit(-1);
         }
         printf("Application terminated.\n");
-    // }
+    }
     return 0;
 }
