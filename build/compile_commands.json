@@ -1,7 +1,13 @@
 [
 {
+<<<<<<< HEAD
   "directory": "/home/janne/C_source_code/application_modeller/process_monitor/build",
   "command": "/usr/bin/x86_64-linux-gnu-gcc-7   -g   -o CMakeFiles/process_monitor.dir/main.c.o   -c /home/janne/C_source_code/application_modeller/process_monitor/main.c",
   "file": "/home/janne/C_source_code/application_modeller/process_monitor/main.c"
+=======
+  "directory": "/home/janne/C/process_monitor/build",
+  "command": "/usr/bin/x86_64-linux-gnu-gcc-7   -g   -o CMakeFiles/process_monitor.dir/main.c.o   -c /home/janne/C/process_monitor/main.c",
+  "file": "/home/janne/C/process_monitor/main.c"
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
 }
 ]

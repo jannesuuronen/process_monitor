@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/janne/C/process_monitor/main.c
+stdio.h
+-
+signal.h
+-
+stdlib.h
+-
+unistd.h
+-
+string.h
+-
+pthread.h
+-
+sys/syscall.h
+-
+sys/types.h
+-
+sys/wait.h
+-
+sys/time.h
+-
+sched.h
+-
+assert.h
+-
+signal.h
+-
+papi.h
+-
+

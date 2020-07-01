@@ -6,7 +6,11 @@
 
 #IncludeRegexTransform: 
 
+<<<<<<< HEAD
 /home/janne/C_source_code/application_modeller/process_monitor/main.c
+=======
+/home/janne/C/process_monitor/main.c
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
 stdio.h
 -
 signal.h
@@ -15,8 +19,11 @@ stdlib.h
 -
 unistd.h
 -
+<<<<<<< HEAD
 papi.h
 -
+=======
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
 pthread.h
 -
 string.h
@@ -31,4 +38,13 @@ sys/time.h
 -
 sched.h
 -
+<<<<<<< HEAD
+=======
+assert.h
+-
+signal.h
+-
+papi.h
+-
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
 

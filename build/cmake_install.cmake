@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Install script for directory: /home/janne/C_source_code/application_modeller/process_monitor
+=======
+# Install script for directory: /home/janne/C/process_monitor
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +49,9 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
+<<<<<<< HEAD
 file(WRITE "/home/janne/C_source_code/application_modeller/process_monitor/build/${CMAKE_INSTALL_MANIFEST}"
+=======
+file(WRITE "/home/janne/C/process_monitor/build/${CMAKE_INSTALL_MANIFEST}"
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,0 +1,1 @@
+/usr/bin/cc    CMakeFiles/process_monitor.dir/main.c.o  -o process_monitor -lpthread /usr/local/lib/libpapi.a 

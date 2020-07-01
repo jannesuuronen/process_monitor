@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 /home/janne/C_source_code/application_modeller/process_monitor/build/CMakeFiles/rebuild_cache.dir
 /home/janne/C_source_code/application_modeller/process_monitor/build/CMakeFiles/process_monitor.dir
 /home/janne/C_source_code/application_modeller/process_monitor/build/CMakeFiles/edit_cache.dir
+=======
+/home/janne/C/process_monitor/build/CMakeFiles/rebuild_cache.dir
+/home/janne/C/process_monitor/build/CMakeFiles/process_monitor.dir
+/home/janne/C/process_monitor/build/CMakeFiles/edit_cache.dir
+>>>>>>> cdb0af9b3fdb22fad17a4f4495d8c3f20e82e755
