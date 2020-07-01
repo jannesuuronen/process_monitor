@@ -17,7 +17,7 @@
 #include <sched.h>
 #include <assert.h>
 #include <signal.h>
-#include <papi.h>
+#include <papi.h>n
 
 /**********
  * Name: write_measurements_to_csv_file
@@ -40,7 +40,7 @@ PAPI_event PAPI_events[] = {
     {PAPI_L3_TCM, "PAPI_L3_TCM"}
 };
 
-int write_measurements_to_csv_file(unsigned int nr_counters, long long (*measurements)[nr_counters], unsigned int num_measurements,  char *output_filename)
+int write_measurements_to_csv_file(unsigned int nr_counters, long long (*measurements)[nr_counters], unsigned int num_measurements, char *output_filename)
 {
     FILE *fp = fopen(output_filename, "w");
 
