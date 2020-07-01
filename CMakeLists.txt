@@ -9,7 +9,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 # set the project name
 project(process_monitor)
 
-# add the executable
+# add the execuptable
 add_executable(process_monitor main.c)
 
 # add the PAPI library
